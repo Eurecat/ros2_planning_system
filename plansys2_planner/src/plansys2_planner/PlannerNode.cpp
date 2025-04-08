@@ -19,6 +19,7 @@
 
 #include "plansys2_planner/PlannerNode.hpp"
 #include "plansys2_popf_plan_solver/popf_plan_solver.hpp"
+#include "plansys2_tfd_plan_solver/tfd_plan_solver.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
 

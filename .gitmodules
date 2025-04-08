@@ -1,0 +1,3 @@
+[submodule "plansys2_tfd_plan_solver"]
+	path = plansys2_tfd_plan_solver
+	url = git@github-work:Eurecat/plansys2_tfd_plan_solver.git

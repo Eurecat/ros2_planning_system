@@ -13,6 +13,7 @@ find_package(plansys2_msgs REQUIRED)
 find_package(plansys2_domain_expert REQUIRED)
 find_package(plansys2_problem_expert REQUIRED)
 find_package(plansys2_popf_plan_solver REQUIRED)
+find_package(plansys2_tfd_plan_solver REQUIRED)
 find_package(plansys2_llm_plan_solver REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -31,6 +32,7 @@ set(dependencies
   plansys2_domain_expert
   plansys2_problem_expert
   plansys2_popf_plan_solver
+  plansys2_tfd_plan_solver
   plansys2_llm_plan_solver
   pluginlib
   std_msgs
