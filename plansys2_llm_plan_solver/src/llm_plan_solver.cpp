@@ -113,11 +113,11 @@ LLMPlanSolver::getPlan(
       item.action = "(" + entry["action"].get<std::string>() + ")";
       item.duration = entry["duration"].get<float>();
       ret.items.push_back(item);
-      // std::cout << "Pushed new action / PlanItem to plan: "
-      //     << "time: " << item.time
-      //     << ", action: " << item.action
-      //     << ", duration: " << item.duration
-      //     << std::endl;
+      std::cout << "Pushed new action / PlanItem to plan: "
+          << "time: " << item.time
+          << ", action: " << item.action
+          << ", duration: " << item.duration
+          << std::endl;
   }
 
   if (ret.items.empty()) {

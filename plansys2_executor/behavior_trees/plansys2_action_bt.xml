@@ -7,7 +7,7 @@ WAIT_PREV_ACTIONS
       <Sequence>
         <SetBlackboard output_key="issue_detected" value="none" />
         <SetBlackboard output_key="explanation" value="" />
-        <Raider action="ACTION_ID" issue_detected="${issue_detected}" explanation="${explanation}" raider_loop_counter="${raider_loop_counter}"/>
+        <!-- <Raider action="ACTION_ID" issue_detected="${issue_detected}" explanation="${explanation}" raider_loop_counter="${raider_loop_counter}"/> -->
         <Fallback>
           <CompareStrings first="${issue_detected}" second="none" comparison_op="=="/>
           <Sequence>
