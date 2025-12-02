@@ -1,5 +1,6 @@
 string action_name # pick_object_for medicine__1 medicine_counter1 Pep
 string explanation
+string[] affected_arguments # medicine**1
 ---
 bool success # True
 ---

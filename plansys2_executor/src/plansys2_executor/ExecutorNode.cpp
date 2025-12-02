@@ -314,10 +314,8 @@ ExecutorNode::handle_cancel(
   const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
 {
   RCLCPP_DEBUG(this->get_logger(), "Received request to cancel goal");
-  std::cout << "[DEVIS RM THIS] CANCELLING PLAN\n" << std::flush; 
   std::lock_guard<std::mutex> lock(goal_handle_mutex_);   
   cancel_plan_requested_ = true;
-
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
@@ -456,17 +454,15 @@ ExecutorNode::execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
       status = tree.tickRoot();
     } catch (std::exception & e) {
       std::cerr << e.what() << std::endl;
-      status == BT::NodeStatus::FAILURE;
+      status = BT::NodeStatus::FAILURE;
     }
 
     {
       std::lock_guard<std::mutex> lock(goal_handle_mutex_);   
       if(!cancel_plan_requested_)
       {
-    feedback->action_execution_status = get_feedback_info(action_map);
-        // std::cout << "[DEVIS RM THIS] ABOUT TO PUBLISH PLAN EXEC FEEDBACK\n" << std::flush; 
-    goal_handle->publish_feedback(feedback);
-        // std::cout << "[DEVIS RM THIS] PUBLISHED PLAN EXEC FEEDBACK\n" << std::flush; 
+        feedback->action_execution_status = get_feedback_info(action_map);
+        goal_handle->publish_feedback(feedback);
       }
     }
 
@@ -508,13 +504,22 @@ ExecutorNode::execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
   }
 
   if (rclcpp::ok()) {
-    goal_handle->succeed(result);
+    if (cancel_plan_requested_) {
+      goal_handle->canceled(result);
+    } else {
+      goal_handle->succeed(result);
+    }
     if (result->success) {
       RCLCPP_INFO(this->get_logger(), "Plan Succeeded");
     } else {
-      RCLCPP_INFO(this->get_logger(), "Plan Failed");
+      if (cancel_plan_requested_) {
+        RCLCPP_INFO(this->get_logger(), "Plan Cancelled");
+      } else {
+        RCLCPP_INFO(this->get_logger(), "Plan Failed");
+      }
     }
   }
+
 }
 
 void

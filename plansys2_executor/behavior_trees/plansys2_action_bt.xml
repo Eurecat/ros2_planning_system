@@ -1,6 +1,7 @@
 <Sequence name="ACTION_ID">
 WAIT_PREV_ACTIONS
   <TreatAmbiguities action="ACTION_ID" issue_detected="pddl_missing_instance" explanation=""/>
+  <TreatUnfeasibilities action="ACTION_ID" issue_detected="test-non-feasible" explanation="there is no bolt in the scene" raider_loop_counter="0"/>
   <!-- 0 -->
   <SetBlackboard output_key="raider_loop_counter" value="0" />
   <RetryUntilSuccessful num_attempts="6">

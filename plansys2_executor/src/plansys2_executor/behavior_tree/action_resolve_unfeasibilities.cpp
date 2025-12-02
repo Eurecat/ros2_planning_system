@@ -59,7 +59,19 @@ ResolveUnfeasibilities::Goal ActionResolveUnfeasibilities::buildGoal(const std::
     }
     else
         goal.action_name = full_action_name;
-
+    
+    std::stringstream ss(goal.action_name);
+    std::string word;
+    // Skip the first word (action name), which is not an argument
+    ss >> word; // Read and discard the action name
+    
+    // Process the remaining words (arguments)
+    while (ss >> word) {
+        // Check if the word contains 404
+        if (word.find("404") != std::string::npos) {
+            goal.affected_arguments.push_back(word);
+        }
+    }
     goal.explanation = explanation;
 
     // std::cout << "goal built" << "\n" << std::flush;
@@ -77,7 +89,7 @@ void ActionResolveUnfeasibilities::send_goal(const ResolveUnfeasibilities::Goal&
     options.result_callback = std::bind(&ActionResolveUnfeasibilities::goal_result_callback, this, _1);
     options.feedback_callback = std::bind(&ActionResolveUnfeasibilities::goal_feedback_callback, this, _1, _2);
 
-    RCLCPP_INFO(node_->get_logger(), "Sending goal: %s", goal.action_name.c_str());
+    RCLCPP_INFO(node_->get_logger(), "Sending resolve unfeasibility goal for %s", goal.action_name.c_str());
     resolve_unfeasibilities_client_->async_send_goal(goal, options);
     std::cout << "Sent resolve unfeasibilities goal " << "\n" << std::flush;
     goal_sent_ = true;
@@ -110,6 +122,8 @@ void ActionResolveUnfeasibilities::goal_result_callback(const ResolveUnfeasibili
 
     resolve_unfeasibilities_result_ = result.result;
     result_received_ = true;
+
+    reset_client_status();
 }
 
 void ActionResolveUnfeasibilities::goal_feedback_callback(const ResolveUnfeasibilitiesGoalHandle::SharedPtr &goal_handle,
@@ -121,12 +135,14 @@ void ActionResolveUnfeasibilities::goal_feedback_callback(const ResolveUnfeasibi
 
 void ActionResolveUnfeasibilities::cancel_goal()
 {
+    // RCLCPP_WARN(node_->get_logger(), "Resolve Unfeasibilities: ActionResolveUnfeasibilities::cancel_goal()");
     if (this->goal_handle_) 
     {
         this->resolve_unfeasibilities_client_->async_cancel_goal(goal_handle_);
         goal_handle_.reset();
     }
     reset_client_status();
+    // RCLCPP_WARN(node_->get_logger(), "Resolve Unfeasibilities: OK ActionResolveUnfeasibilities::cancel_goal()");
 }
 
 BT::NodeStatus
@@ -145,12 +161,13 @@ ActionResolveUnfeasibilities::tick()
 
   bool no_issue_detected = issue_detected.find("unfeasibility") == std::string::npos;
 
-  // std::cout << "Running ActionResolveUnfeasibilities no_issue_detected " << no_issue_detected << "\n" << std::flush;
-  // std::cout << "THE ISSUE DETECTED ISSSSSSSS: " << issue_detected << "\n" << std::flush;
+  // std::cout << "Running ActionResolveUnfeasibilities no_issue_detected: " << no_issue_detected << "\n" << std::flush;
+  
   auto goal = buildGoal(action, explanation);
-  if(no_issue_detected)
+  if(no_issue_detected && goal.affected_arguments.size() == 0)
     {
       std::cout << "No unfeasibility" << "\n" << std::flush;
+      reset_client_status();
       return BT::NodeStatus::SUCCESS; // no unfeasibility
     }  
 
@@ -178,7 +195,11 @@ ActionResolveUnfeasibilities::tick()
           return BT::NodeStatus::SUCCESS;
         }
         else
+        {
+          reset_client_status();
           return BT::NodeStatus::FAILURE;
+        }
+          
       }
     }
     return BT::NodeStatus::RUNNING;

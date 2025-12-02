@@ -142,6 +142,8 @@ void ActionResolveAmbiguities::goal_result_callback(const ResolveAmbiguitiesGoal
 
     resolve_ambiguities_result_ = result.result;
     result_received_ = true;
+
+    // reset_client_status();
 }
 
 void ActionResolveAmbiguities::goal_feedback_callback(const ResolveAmbiguitiesGoalHandle::SharedPtr &goal_handle,
@@ -153,12 +155,14 @@ void ActionResolveAmbiguities::goal_feedback_callback(const ResolveAmbiguitiesGo
 
 void ActionResolveAmbiguities::cancel_goal()
 {
+    // RCLCPP_WARN(node_->get_logger(), "Resolve Unfeasibilities: ActionResolveAmbiguities::cancel_goal()");
     if (this->goal_handle_) 
     {
         this->resolve_ambiguities_client_->async_cancel_goal(goal_handle_);
         goal_handle_.reset();
     }
     reset_client_status();
+    // RCLCPP_WARN(node_->get_logger(), "Resolve Unfeasibilities: OK ActionResolveAmbiguities::cancel_goal()");
 }
 
 BT::NodeStatus
@@ -166,7 +170,7 @@ ActionResolveAmbiguities::tick()
 {
     std::string action;
     getInput("action", action);
-    std::cout << "Running ActionResolveAmbiguities for " << action << "\n" << std::flush;
+    // std::cout << "Running ActionResolveAmbiguities for " << action << "\n" << std::flush;
 
     std::string issue_detected, explanation;
     getInput("issue_detected", issue_detected);
@@ -175,19 +179,20 @@ ActionResolveAmbiguities::tick()
     // bool no_issue_detected = issue_detected.find("ambiguity") == std::string::npos && issue_detected.find("pddl_missing_instance") == std::string::npos;
     bool no_issue_detected = issue_detected.find("ambiguity") == std::string::npos && issue_detected.find("unfeasibility") == std::string::npos;
 
-    std::cout << "Running ActionResolveAmbiguities no_issue_detected " << no_issue_detected << "\n" << std::flush;
+    // std::cout << "Running ActionResolveAmbiguities no_issue_detected " << no_issue_detected << "\n" << std::flush;
 
     auto goal = buildGoal(action, explanation);
     if(no_issue_detected && goal.ambiguous_arguments.size() == 0)
         {
             std::cout << "No ambiguous arguments" << "\n" << std::flush;
+            reset_client_status();
             return BT::NodeStatus::SUCCESS; // no ambiguous
         }
 
     auto instances = problem_client_->getInstances();
 
     // TODO REMOVE THIS TEST
-    std::cout << "Found an Ambiguous ARGUMENT! Actually doing something in ActionResolveAmbiguities for " << action << "\n" << std::flush;
+    // std::cout << "Found an Ambiguous ARGUMENT! Actually doing something in ActionResolveAmbiguities for " << action << "\n" << std::flush;
 
     int ambiguous_resolved_counter = 0;
     for (auto &p_ins : instances)
@@ -205,9 +210,13 @@ ActionResolveAmbiguities::tick()
 
 
     if(no_issue_detected && ambiguous_resolved_counter == goal.ambiguous_arguments.size())
+    {
+      reset_client_status();
       return BT::NodeStatus::SUCCESS;
+    }
+      
 
-    // END TEST
+
 
   
 
@@ -254,8 +263,12 @@ ActionResolveAmbiguities::tick()
             }
         }
         else
+        {
+          reset_client_status();
           return BT::NodeStatus::FAILURE;
+        }
       }
+      reset_client_status();
       return BT::NodeStatus::SUCCESS;
     }
     return BT::NodeStatus::RUNNING;

@@ -126,6 +126,8 @@ void PromptingRaider::goal_result_callback(const RaiderGoalHandle::WrappedResult
  
     raider_result_ = result.result;
     result_received_ = true;
+
+    // reset_client_status();
 }
  
 void PromptingRaider::goal_feedback_callback(const RaiderGoalHandle::SharedPtr &goal_handle,
@@ -137,12 +139,16 @@ void PromptingRaider::goal_feedback_callback(const RaiderGoalHandle::SharedPtr &
  
 void PromptingRaider::cancel_goal()
 {
+
+    // RCLCPP_WARN(node_->get_logger(), "Resolve Unfeasibilities: PromptingRaider::cancel_goal()");
     if (this->goal_handle_)
     {
         this->raider_client_->async_cancel_goal(goal_handle_);
         goal_handle_.reset();
     }
     reset_client_status();
+
+    // RCLCPP_WARN(node_->get_logger(), "Resolve Unfeasibilities: OK PromptingRaider::cancel_goal()");
 }
  
 BT::NodeStatus
@@ -194,7 +200,11 @@ PromptingRaider::tick()
                         reset_client_status();
                     }
                     else
-                        ret_status = BT::NodeStatus::FAILURE; 
+                    {
+                        ret_status = BT::NodeStatus::FAILURE;
+                        reset_client_status();
+                    }
+                         
             }
             
             return ret_status;
