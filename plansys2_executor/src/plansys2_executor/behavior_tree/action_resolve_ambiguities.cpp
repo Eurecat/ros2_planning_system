@@ -44,9 +44,9 @@ void ActionResolveAmbiguities::reset_client_status()
 }
 
 
-ResolveAmbiguities::Goal ActionResolveAmbiguities::buildGoal(const std::string& full_action_name, const std::string& explanation)
+ResolveAmbiguities::Goal ActionResolveAmbiguities::buildGoal(const std::string& full_action_name,  const std::vector<plansys2::Instance>& instances, const std::string& explanation)
 {
-    std::cout << "building goal " << "\n" << std::flush;
+    // std::cout << "building goal " << "\n" << std::flush;
     auto goal = ResolveAmbiguities::Goal();
 
     size_t start = full_action_name.find('(');
@@ -73,16 +73,32 @@ ResolveAmbiguities::Goal ActionResolveAmbiguities::buildGoal(const std::string& 
     // Process the remaining words (arguments)
     while (ss >> word) {
         // Check if the word contains two consecutive underscores
-        if (word.find("__") != std::string::npos) {
+        bool ambiguous = false;
+        if (word.find("__") != std::string::npos) 
+        {
+            for(const auto& instance : instances)
+            {
+                if(instance.name == word)
+                {
+                    ambiguous = instance.metainfo.empty();
+                    break;
+                }
+            }
+        } 
+        
+        if(ambiguous)
+        {
             goal.ambiguous_arguments.push_back(word);
-        } else {
+        }
+        else
+        {
             goal.known_arguments.push_back(word);
         }
     }
 
     goal.explanation = explanation;
 
-    std::cout << "goal built" << "\n" << std::flush;
+    // std::cout << "goal built" << "\n" << std::flush;
     return goal;
 }
 
@@ -180,8 +196,9 @@ ActionResolveAmbiguities::tick()
     bool no_issue_detected = issue_detected.find("ambiguity") == std::string::npos && issue_detected.find("unfeasibility") == std::string::npos;
 
     // std::cout << "Running ActionResolveAmbiguities no_issue_detected " << no_issue_detected << "\n" << std::flush;
+    auto instances = problem_client_->getInstances();
 
-    auto goal = buildGoal(action, explanation);
+    auto goal = buildGoal(action, instances, explanation);
     if(no_issue_detected && goal.ambiguous_arguments.size() == 0)
         {
             std::cout << "No ambiguous arguments" << "\n" << std::flush;
@@ -189,7 +206,7 @@ ActionResolveAmbiguities::tick()
             return BT::NodeStatus::SUCCESS; // no ambiguous
         }
 
-    auto instances = problem_client_->getInstances();
+    // instances = problem_client_->getInstances();
 
     // TODO REMOVE THIS TEST
     // std::cout << "Found an Ambiguous ARGUMENT! Actually doing something in ActionResolveAmbiguities for " << action << "\n" << std::flush;

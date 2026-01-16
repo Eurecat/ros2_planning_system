@@ -223,9 +223,15 @@ public:
   // make sure to cancel the ROS2 action if it is still running.
   void halt() override
   {
+    RCLCPP_INFO(
+      node_->get_logger(),
+      "Halting BtActionNode for action: %s",
+      action_name_.c_str());
+      std::cout << "\n Halting BtActionNode for action: " << action_name_ << "\n" << std::flush;
     if (should_cancel_goal()) {
       cancel_goal();
     }
+    goal_handle_.reset();
 
     setStatus(BT::NodeStatus::IDLE);
   }
@@ -233,14 +239,21 @@ public:
 protected:
   void cancel_goal()
   {
-    auto future_cancel = action_client_->async_cancel_goal(goal_handle_);
-    if (rclcpp::spin_until_future_complete(
-        node_->get_node_base_interface(), future_cancel, server_timeout_) !=
-      rclcpp::FutureReturnCode::SUCCESS)
-    {
-      RCLCPP_ERROR(
-        node_->get_logger(),
-        "Failed to cancel action server for %s", action_name_.c_str());
+    RCLCPP_INFO(
+      node_->get_logger(),
+      "Cancelling goal for action: %s",
+      action_name_.c_str());
+    
+    if (goal_handle_) {
+      auto future_cancel = action_client_->async_cancel_goal(goal_handle_);
+      if (rclcpp::spin_until_future_complete(
+          node_->get_node_base_interface(), future_cancel, server_timeout_) !=
+        rclcpp::FutureReturnCode::SUCCESS)
+      {
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "Failed to cancel action server for %s", action_name_.c_str());
+      }
     }
   }
 
@@ -251,8 +264,20 @@ protected:
       return false;
     }
 
+    if (!goal_handle_) {
+      return false;
+    }
+    RCLCPP_INFO(
+      node_->get_logger(),
+      "Checking if goal for action %s should be cancelled",
+      action_name_.c_str());
     rclcpp::spin_some(node_->get_node_base_interface());
     auto status = goal_handle_->get_status();
+    RCLCPP_INFO(
+      node_->get_logger(),
+      "Current goal status for action %s: %d",
+      action_name_.c_str(),
+      static_cast<int>(status));
 
     // Check if the goal is still executing
     return status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED ||

@@ -118,7 +118,8 @@ DomainExpertNode::on_configure(const rclcpp_lifecycle::State & state)
 
   bool check_valid = planner->is_valid_domain(domain_expert_->getDomain(), get_namespace());
   if (!check_valid) {
-    RCLCPP_ERROR_STREAM(get_logger(), "PDDL syntax error");
+    RCLCPP_ERROR(get_logger(), "PDDL syntax error from model_file %s \n domain: %s", 
+      model_file.c_str(), domain_expert_->getDomain().c_str());
     return CallbackReturnT::FAILURE;
   }
 

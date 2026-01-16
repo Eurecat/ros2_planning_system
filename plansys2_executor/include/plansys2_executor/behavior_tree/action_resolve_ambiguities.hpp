@@ -46,7 +46,7 @@ public:
   }
 
 private:
-  static ResolveAmbiguities::Goal buildGoal(const std::string& full_action_name, const std::string& explanation);
+  static ResolveAmbiguities::Goal buildGoal(const std::string& full_action_name, const std::vector<plansys2::Instance>& instances, const std::string& explanation);
   void send_goal(const ResolveAmbiguities::Goal& goal);
 
   void goal_response_callback(const ResolveAmbiguitiesGoalHandle::SharedPtr &goal_handle);
